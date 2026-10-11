@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#071b2a">
+    <meta name="description" content="離線橋牌 Double-dummy 合約成約率模擬器">
+    <meta name="google-site-verification" content="2SWjxzSh02rRSK1xe7x_lnjCm068D20iz3vR7cQNFYQ">
+    <title>橋牌合約成約率模擬器</title>
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">♠</span>
+        <div>
+          <h1>橋牌合約模擬器</h1>
+          <p>Double-dummy 最佳攻防分析</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <label class="language-control" aria-label="介面語言">
+          <span>語言</span>
+          <select id="languageSelect">
+            <option value="zh-Hant">繁體中文</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <span id="networkBadge" class="status-badge">離線可用</span>
+        <button id="installButton" class="button button-ghost" hidden>安裝應用</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel input-panel" aria-labelledby="inputTitle">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">SIMULATION SETUP</span>
+            <h2 id="inputTitle">模擬條件</h2>
+          </div>
+          <div class="segmented" role="tablist" aria-label="模擬模式">
+            <button class="segment active" type="button" data-mode="conditions" role="tab" aria-selected="true">條件模擬</button>
+            <button class="segment" type="button" data-mode="fixed" role="tab" aria-selected="false">固定南北牌</button>
+          </div>
+        </div>
+
+        <form id="simulationForm" novalidate>
+          <div id="conditionsFields" class="mode-fields">
+            <div class="hands-grid">
+              <fieldset class="hand-card">
+                <legend><span class="seat north">N</span>北家條件</legend>
+                <div class="field-grid">
+                  <label>HCP 範圍<input name="northHcp" value="0-37" inputmode="numeric"></label>
+                  <label>牌型<input name="northShapes" placeholder="5332,5422"></label>
+                  <label>S-H-D-C 張數<input name="northSuitLengths" placeholder="5-?-?-?"></label>
+                  <label>特定花色牌張<input name="northHoldings" placeholder="S=AKQJ10xxx"></label>
+                </div>
+                <div class="checks">
+                  <label><input type="checkbox" name="northSingleton"> 至少一門單張</label>
+                  <label><input type="checkbox" name="northVoid"> 至少一門缺門</label>
+                </div>
+              </fieldset>
+
+              <fieldset class="hand-card">
+                <legend><span class="seat south">S</span>南家條件</legend>
+                <div class="field-grid">
+                  <label>HCP 範圍<input name="southHcp" value="0-37" inputmode="numeric"></label>
+                  <label>牌型<input name="southShapes" placeholder="4333,4432"></label>
+                  <label>S-H-D-C 張數<input name="southSuitLengths" placeholder="4-?-?-?"></label>
+                  <label>特定花色牌張<input name="southHoldings" placeholder="H=Axxxx"></label>
+                </div>
+                <div class="checks">
+                  <label><input type="checkbox" name="southSingleton"> 至少一門單張</label>
+                  <label><input type="checkbox" name="southVoid"> 至少一門缺門</label>
+                </div>
+              </fieldset>
+            </div>
+            <label class="wide-field">南北合計 HCP
+              <input name="combinedHcp" value="0-40" inputmode="numeric">
+            </label>
+          </div>
+
+          <div id="fixedFields" class="mode-fields" hidden>
+            <div class="fixed-grid">
+              <label>北家 13 張牌
+                <input name="fixedNorth" placeholder="AKQJ.T98.765.432" autocomplete="off">
+              </label>
+              <label>南家 13 張牌
+                <input name="fixedSouth" placeholder="T987.AKQ.432.JT9" autocomplete="off">
+              </label>
+            </div>
+            <p class="field-hint">依 S.H.D.C 輸入；缺門可留空或輸入 -。</p>
+          </div>
+
+          <fieldset class="contract-card">
+            <legend>合約與模擬設定</legend>
+            <div class="contract-grid">
+              <label>線位
+                <select name="level">
+                  <option>1</option><option>2</option><option>3</option><option selected>4</option>
+                  <option>5</option><option>6</option><option>7</option>
+                </select>
+              </label>
+              <label>花色
+                <select id="denomination" name="denomination">
+                  <option value="C">♣ C</option><option value="D">♦ D</option>
+                  <option value="H">♥ H</option><option value="S" selected>♠ S</option>
+                  <option value="NT">NT</option>
+                </select>
+              </label>
+              <label>莊家
+                <select name="declarer"><option value="N">N 北家</option><option value="S">S 南家</option></select>
+              </label>
+              <label class="trump-only">最少王牌配合
+                <input name="minimumFit" value="8" type="number" min="0" max="13">
+              </label>
+              <label class="trump-only">最多王牌配合
+                <input name="maximumFit" value="13" type="number" min="0" max="13">
+              </label>
+              <label class="trump-only">東西王牌分布
+                <input name="opponentTrumpSplits" placeholder="3-1,2-2">
+              </label>
+              <label>東／西各自 HCP 上限
+                <input name="opponentHcpMax" value="10" type="number" min="0" max="37">
+              </label>
+              <label>樣本數模式
+                <select id="samplingMode" name="samplingMode">
+                  <option value="auto" selected>依目標誤差自動</option>
+                  <option value="manual">手動輸入</option>
+                </select>
+              </label>
+              <label id="precisionField">95% 目標誤差
+                <select name="marginPercent">
+                  <option value="5" selected>±5%（385 副，快速）</option>
+                  <option value="3">±3%（1,068 副）</option>
+                  <option value="2">±2%（2,401 副）</option>
+                  <option value="1">±1%（9,604 副）</option>
+                </select>
+              </label>
+              <label id="sampleField" hidden>有效模擬副數
+                <input name="samples" value="1000" type="number" min="1" max="100000" inputmode="numeric">
+              </label>
+              <label>隨機種子
+                <input name="seed" placeholder="自動產生" type="number" min="0" inputmode="numeric">
+              </label>
+            </div>
+            <p id="samplingHint" class="field-hint">自動模式會以最保守的成約率估算樣本數；目前約需 385 副。</p>
+          </fieldset>
+
+          <div id="formError" class="error-message" role="alert" hidden></div>
+          <div class="run-row">
+            <button id="runButton" class="button button-primary" type="submit">開始模擬</button>
+            <button id="cancelButton" class="button button-danger" type="button" hidden>停止</button>
+            <div class="progress-area" aria-live="polite">
+              <div class="progress-copy"><span id="progressLabel">就緒</span><span id="progressCount"></span></div>
+              <progress id="progressBar" value="0" max="100"></progress>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel results-panel" aria-labelledby="resultTitle">
+        <div class="panel-heading result-heading">
+          <div>
+            <span class="eyebrow">ANALYSIS</span>
+            <h2 id="resultTitle">模擬結果</h2>
+          </div>
+          <button id="copyButton" class="button button-ghost" type="button" disabled>複製結果</button>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+          <div class="empty-suits" aria-hidden="true"><span>♠</span><span>♥</span><span>♦</span><span>♣</span></div>
+          <h3>設定條件後開始模擬</h3>
+          <p>結果會顯示成約率、95% 信賴區間、磴數分布和代表牌例。</p>
+        </div>
+
+        <div id="resultContent" hidden>
+          <div id="sampleWarning" class="warning-message" hidden></div>
+          <div class="metrics">
+            <article class="metric hero-metric"><span>成約率</span><strong id="makingRate">—</strong><small id="confidenceInterval"></small></article>
+            <article class="metric"><span>平均磴數</span><strong id="averageTricks">—</strong><small id="contractLabel"></small></article>
+            <article class="metric"><span>有效樣本</span><strong id="completedSamples">—</strong><small id="attemptsLabel"></small></article>
+          </div>
+
+          <div class="charts-grid">
+            <article class="chart-card">
+              <div class="chart-title"><h3>磴數分布</h3><span>綠色為成約</span></div>
+              <canvas id="trickChart" role="img" aria-label="DDS 磴數分布長條圖"></canvas>
+            </article>
+            <article class="chart-card compact-chart">
+              <div class="chart-title"><h3>成約與失敗</h3></div>
+              <canvas id="makingChart" role="img" aria-label="成約與失敗圓環圖"></canvas>
+              <div class="legend"><span><i class="made"></i>成約 <b id="madeCount"></b></span><span><i class="down"></i>失敗 <b id="downCount"></b></span></div>
+            </article>
+          </div>
+
+          <details class="details-card" open>
+            <summary>完整數據</summary>
+            <div class="details-grid">
+              <div><span>隨機種子</span><strong id="seedLabel"></strong></div>
+              <div><span>總耗時</span><strong id="elapsedLabel"></strong></div>
+              <div><span>候選牌局</span><strong id="attemptCount"></strong></div>
+              <div><span>平均候選/有效牌</span><strong id="attemptRatio"></strong></div>
+            </div>
+            <div class="distribution-wrap"><table><thead><tr><th>磴數</th><th>副數</th><th>比例</th></tr></thead><tbody id="distributionBody"></tbody></table></div>
+            <div id="opponentSplitWrap" class="distribution-wrap" hidden>
+              <h3>東西王牌分布（不分方向）</h3>
+              <table><thead><tr><th>分布</th><th>副數</th><th>比例</th></tr></thead><tbody id="opponentSplitBody"></tbody></table>
+            </div>
+          </details>
+
+          <div class="examples-grid">
+            <details class="details-card"><summary>成約牌例</summary><pre id="makingExamples"></pre></details>
+            <details class="details-card"><summary>失敗牌例</summary><pre id="failingExamples"></pre></details>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>所有發牌與 DDS 分析都在這台裝置上完成；安裝後可全程離線使用。</footer>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

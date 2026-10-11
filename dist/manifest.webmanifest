@@ -1,0 +1,20 @@
+{
+  "name": "橋牌合約成約率模擬器",
+  "short_name": "橋牌模擬器",
+  "description": "在裝置上離線進行橋牌 Double-dummy 合約成約率模擬。",
+  "lang": "zh-Hant",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#071b2a",
+  "theme_color": "#071b2a",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
